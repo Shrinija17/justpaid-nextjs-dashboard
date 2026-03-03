@@ -1,30 +1,12 @@
 "use client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { timeAgo } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface Signal {
   source: string; title: string; url: string;
   score: number; comments: number; created: number;
   subreddit?: string; author?: string; category: string;
-}
-
-function getLeads(): Signal[] {
-  const now = Math.floor(Date.now() / 1000);
-  const hour = 3600;
-  return [
-    { source: "Reddit", title: "How do you handle contractor payments across different countries?", url: "https://reddit.com/r/startups", score: 287, comments: 43, created: now - 2 * hour, subreddit: "startups", author: "founder_dev", category: "contractor" },
-    { source: "HN", title: "Ask HN: Best tools for paying international contractors in 2025?", url: "https://news.ycombinator.com", score: 156, comments: 78, created: now - 5 * hour, category: "contractor" },
-    { source: "Reddit", title: "Payroll compliance nightmare — we got fined $40K. What are you using?", url: "https://reddit.com/r/Entrepreneur", score: 134, comments: 91, created: now - 8 * hour, subreddit: "Entrepreneur", author: "startup_cto", category: "payroll" },
-    { source: "Reddit", title: "Invoice automation for SaaS — anyone tried AI-powered billing?", url: "https://reddit.com/r/SaaS", score: 98, comments: 34, created: now - 12 * hour, subreddit: "SaaS", author: "saas_builder", category: "invoice" },
-    { source: "HN", title: "Our payroll provider failed us — looking for alternatives with global coverage", url: "https://news.ycombinator.com", score: 87, comments: 52, created: now - 18 * hour, category: "payroll" },
-    { source: "Reddit", title: "Deel vs Remote vs JustPaid — which one actually works for early-stage?", url: "https://reddit.com/r/startups", score: 76, comments: 29, created: now - 24 * hour, subreddit: "startups", author: "yc_founder", category: "general" },
-    { source: "Reddit", title: "How to classify contractors in multiple states — any SaaS that helps?", url: "https://reddit.com/r/smallbusiness", score: 61, comments: 18, created: now - 30 * hour, subreddit: "smallbusiness", category: "contractor" },
-    { source: "HN", title: "Just got burned by misclassification penalty — what compliance tools do you use?", url: "https://news.ycombinator.com", score: 54, comments: 67, created: now - 36 * hour, category: "payroll" },
-    { source: "Reddit", title: "Automated invoice reconciliation — is it possible without an accountant?", url: "https://reddit.com/r/Accounting", score: 43, comments: 22, created: now - 42 * hour, subreddit: "Accounting", category: "invoice" },
-    { source: "Reddit", title: "How do YC companies handle payroll before Series A?", url: "https://reddit.com/r/ycombinator", score: 38, comments: 15, created: now - 48 * hour, subreddit: "ycombinator", author: "w25_founder", category: "general" },
-    { source: "HN", title: "Building in public: our payroll stack for a 12-person remote team", url: "https://news.ycombinator.com", score: 31, comments: 44, created: now - 54 * hour, category: "payroll" },
-    { source: "Reddit", title: "Contractor invoice disputes — what tools automate the resolution?", url: "https://reddit.com/r/freelance", score: 27, comments: 11, created: now - 60 * hour, subreddit: "freelance", category: "invoice" },
-  ];
 }
 
 const CAT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
@@ -40,7 +22,16 @@ const SRC_STYLE: Record<string, { bg: string; color: string }> = {
 };
 
 export default function LeadsPage() {
-  const signals = getLeads();
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/leads")
+      .then(r => r.json())
+      .then((data: Signal[]) => { setSignals(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
   const hot = signals.filter(s => s.score >= 50).length;
   const reddit = signals.filter(s => s.source === "Reddit").length;
   const hn = signals.filter(s => s.source === "HN").length;
@@ -67,10 +58,10 @@ export default function LeadsPage() {
       {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
         {[
-          { label:"Total Signals", value: signals.length, color:"#6C5CE7" },
-          { label:"🔥 Hot (50+ pts)", value: hot, color:"#E17055" },
-          { label:"From Reddit", value: reddit, color:"#FF4500" },
-          { label:"From HN", value: hn, color:"#FF6600" },
+          { label:"Total Signals", value: loading ? "—" : signals.length, color:"#6C5CE7" },
+          { label:"🔥 Hot (50+ pts)", value: loading ? "—" : hot, color:"#E17055" },
+          { label:"From Reddit", value: loading ? "—" : reddit, color:"#FF4500" },
+          { label:"From HN", value: loading ? "—" : hn, color:"#FF6600" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background:"#12121A", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, padding:"1.2rem", textAlign:"center" }}>
             <div style={{ fontSize:"0.6rem", color:"#5A5A6A", textTransform:"uppercase", letterSpacing:"1px", marginBottom:"0.4rem" }}>{label}</div>
@@ -79,8 +70,14 @@ export default function LeadsPage() {
         ))}
       </div>
 
+      {loading && (
+        <div style={{ textAlign:"center", color:"#5A5A6A", padding:"3rem", fontSize:"0.9rem" }}>
+          Fetching live signals from Reddit & HN…
+        </div>
+      )}
+
       {/* Top insight */}
-      {signals[0] && (
+      {!loading && signals[0] && (
         <div style={{
           background:"linear-gradient(135deg,rgba(0,184,148,0.07),rgba(0,206,201,0.04))",
           border:"1px solid rgba(0,184,148,0.2)", borderRadius:14, padding:"1.2rem 1.5rem", marginBottom:"2rem",
@@ -98,55 +95,57 @@ export default function LeadsPage() {
       )}
 
       {/* Signal feed */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))", gap:"1rem" }}>
-        {signals.map((s, i) => {
-          const cat = CAT_STYLE[s.category] || CAT_STYLE.general;
-          const src = SRC_STYLE[s.source] || SRC_STYLE.HN;
-          const isHot = s.score >= 50;
-          return (
-            <a key={i} href={s.url} target="_blank" rel="noreferrer" style={{ textDecoration:"none" }}>
-              <div style={{
-                background:"#12121A", border:`1px solid rgba(255,255,255,0.06)`,
-                borderLeft: `3px solid ${cat.color}`,
-                borderRadius: "0 14px 14px 0", padding:"1.2rem",
-                transition:"all 0.22s", cursor:"pointer",
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "translateX(4px)";
-                el.style.borderColor = `${cat.color}55`;
-                el.style.boxShadow = `0 4px 20px rgba(0,0,0,0.3)`;
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "translateX(0)";
-                el.style.borderColor = "rgba(255,255,255,0.06)";
-                el.style.boxShadow = "none";
-              }}
-              >
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"0.7rem", gap:"0.5rem", flexWrap:"wrap" }}>
-                  <div style={{ display:"flex", gap:"0.4rem", flexWrap:"wrap" }}>
-                    <span style={{ background:src.bg, color:src.color, fontSize:"0.6rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", padding:"0.2rem 0.6rem", borderRadius:6 }}>
-                      {s.source}{s.subreddit ? ` · ${s.subreddit}` : ""}
-                    </span>
-                    <span style={{ background:cat.bg, color:cat.color, fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>
-                      {cat.label}
-                    </span>
-                    {isHot && <span style={{ background:"rgba(225,112,85,0.12)", color:"#E17055", fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>🔥 Hot</span>}
+      {!loading && (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(340px,1fr))", gap:"1rem" }}>
+          {signals.map((s, i) => {
+            const cat = CAT_STYLE[s.category] || CAT_STYLE.general;
+            const src = SRC_STYLE[s.source] || SRC_STYLE.HN;
+            const isHot = s.score >= 50;
+            return (
+              <a key={i} href={s.url} target="_blank" rel="noreferrer" style={{ textDecoration:"none" }}>
+                <div style={{
+                  background:"#12121A", border:`1px solid rgba(255,255,255,0.06)`,
+                  borderLeft: `3px solid ${cat.color}`,
+                  borderRadius: "0 14px 14px 0", padding:"1.2rem",
+                  transition:"all 0.22s", cursor:"pointer",
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "translateX(4px)";
+                  el.style.borderColor = `${cat.color}55`;
+                  el.style.boxShadow = `0 4px 20px rgba(0,0,0,0.3)`;
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "translateX(0)";
+                  el.style.borderColor = "rgba(255,255,255,0.06)";
+                  el.style.boxShadow = "none";
+                }}
+                >
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"0.7rem", gap:"0.5rem", flexWrap:"wrap" }}>
+                    <div style={{ display:"flex", gap:"0.4rem", flexWrap:"wrap" }}>
+                      <span style={{ background:src.bg, color:src.color, fontSize:"0.6rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", padding:"0.2rem 0.6rem", borderRadius:6 }}>
+                        {s.source}{s.subreddit ? ` · r/${s.subreddit}` : ""}
+                      </span>
+                      <span style={{ background:cat.bg, color:cat.color, fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>
+                        {cat.label}
+                      </span>
+                      {isHot && <span style={{ background:"rgba(225,112,85,0.12)", color:"#E17055", fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>🔥 Hot</span>}
+                    </div>
+                  </div>
+                  <div style={{ fontSize:"0.88rem", fontWeight:600, color:"#E2E2EA", lineHeight:1.4, marginBottom:"0.7rem" }}>{s.title}</div>
+                  <div style={{ display:"flex", gap:"1rem", fontSize:"0.7rem", color:"#5A5A6A" }}>
+                    <span>↑ {s.score}</span>
+                    <span>💬 {s.comments}</span>
+                    <span>{timeAgo(s.created)}</span>
+                    {s.author && <span>by u/{s.author}</span>}
                   </div>
                 </div>
-                <div style={{ fontSize:"0.88rem", fontWeight:600, color:"#E2E2EA", lineHeight:1.4, marginBottom:"0.7rem" }}>{s.title}</div>
-                <div style={{ display:"flex", gap:"1rem", fontSize:"0.7rem", color:"#5A5A6A" }}>
-                  <span>↑ {s.score}</span>
-                  <span>💬 {s.comments}</span>
-                  <span>{timeAgo(s.created)}</span>
-                  {s.author && <span>by {s.author}</span>}
-                </div>
-              </div>
-            </a>
-          );
-        })}
-      </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
 
       {/* Outreach templates */}
       <div style={{ marginTop:"2.5rem", display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>

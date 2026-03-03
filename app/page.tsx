@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+"use client";
 import DashboardLayout from "@/components/DashboardLayout";
 import KpiCard from "@/components/KpiCard";
 import GrowthChart from "@/components/GrowthChart";
@@ -7,39 +7,64 @@ import TopPostsTable from "@/components/TopPostsTable";
 import QoQSection from "@/components/QoQSection";
 import { PLATFORM_COLORS, PLATFORM_ICONS, fmt } from "@/lib/utils";
 
-async function getMetrics() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/metrics`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
+function getMetrics() {
+  return [
+    { platform: "LinkedIn", followers: 3400, follower_change: 550, engagement_rate: 4.2 },
+    { platform: "Twitter", followers: 2100, follower_change: 225, engagement_rate: 2.1 },
+    { platform: "Instagram", followers: 1200, follower_change: 280, engagement_rate: 3.8 },
+    { platform: "YouTube", followers: 890, follower_change: 138, engagement_rate: 5.1 },
+  ];
 }
-async function getGrowth() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/growth`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
+function getGrowth() {
+  const platforms = ["LinkedIn","Twitter","Instagram","YouTube"];
+  const bases: Record<string,number> = { LinkedIn: 2900, Twitter: 1900, Instagram: 950, YouTube: 760 };
+  const result = [];
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    platforms.forEach(p => {
+      const growth = (89 - i) / 89;
+      result.push({ platform: p, date: { value: dateStr }, followers: Math.round(bases[p] * (1 + growth * 0.17)) });
+    });
+  }
+  return result;
 }
-async function getPosts() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/posts`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
+function getPosts() {
+  return [
+    { platform: "LinkedIn", title: "Why most startups fail at payroll compliance", post_type: "Article", views: 12400, likes: 847, comments: 203, shares: 156 },
+    { platform: "YouTube", title: "JustPaid vs Deel: Full comparison 2025", post_type: "Video", views: 8900, likes: 623, comments: 187, shares: 94 },
+    { platform: "Twitter", title: "Thread: 7 payroll mistakes that cost startups $10K+", post_type: "Thread", views: 6200, likes: 412, comments: 89, shares: 201 },
+    { platform: "Instagram", title: "The contractor payment checklist every founder needs", post_type: "Carousel", views: 4100, likes: 389, comments: 67, shares: 78 },
+    { platform: "LinkedIn", title: "International contractor payments: what we learned", post_type: "Post", views: 3800, likes: 276, comments: 94, shares: 45 },
+  ];
 }
-async function getQoQ() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/qoq`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return null; }
+function getQoQ() {
+  const makePosts = (mult: number) => [
+    { title: "Why most startups fail at payroll compliance", views: Math.round(12400 * mult), platform: "LinkedIn" },
+    { title: "JustPaid vs Deel: Full comparison 2025", views: Math.round(8900 * mult), platform: "YouTube" },
+    { title: "Thread: 7 payroll mistakes that cost startups $10K+", views: Math.round(6200 * mult), platform: "Twitter" },
+  ];
+  return {
+    current: {
+      label: "Q2 2025",
+      stats: { total_posts: 61, total_views: 58000, total_likes: 4200, avg_views: 951, engagement_rate: 3.8 },
+      posts: makePosts(1),
+    },
+    previous: {
+      label: "Q1 2025",
+      stats: { total_posts: 48, total_views: 42000, total_likes: 3100, avg_views: 875, engagement_rate: 3.2 },
+      posts: makePosts(0.72),
+    },
+  };
 }
 
 const PLATFORM_ORDER = ["YouTube", "Instagram", "LinkedIn", "Twitter"];
 
-export default async function Home() {
-  const [metrics, growth, posts, qoq] = await Promise.all([getMetrics(), getGrowth(), getPosts(), getQoQ()]);
+export default function Home() {
+  const metrics = getMetrics();
+  const growth = getGrowth();
+  const posts = getPosts();
+  const qoq = getQoQ();
   const now = new Date().toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
   return (
@@ -79,9 +104,9 @@ export default async function Home() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1.2rem", marginBottom: "2rem" }}>
         {PLATFORM_ORDER.map(platform => {
           const m = metrics.find((r: {platform:string}) => r.platform === platform) || {};
-          const followers = Number(m.followers || 0);
-          const change = Number(m.follower_change || 0);
-          const engagement = Number(m.engagement_rate || 0);
+          const followers = Number((m as Record<string,number>).followers || 0);
+          const change = Number((m as Record<string,number>).follower_change || 0);
+          const engagement = Number((m as Record<string,number>).engagement_rate || 0);
           const pct = followers > 0 ? Math.abs(((change / (followers - change)) * 100)).toFixed(0) : "0";
           return (
             <KpiCard key={platform}

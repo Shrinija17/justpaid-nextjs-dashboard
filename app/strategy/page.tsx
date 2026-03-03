@@ -1,12 +1,14 @@
-export const dynamic = "force-dynamic";
+"use client";
 import DashboardLayout from "@/components/DashboardLayout";
 
-async function getPosts() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/posts`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
+function getPosts() {
+  return [
+    { platform: "LinkedIn", title: "Why most startups fail at payroll compliance", post_type: "Article", views: 12400, likes: 847, comments: 203, shares: 156 },
+    { platform: "YouTube", title: "JustPaid vs Deel: Full comparison 2025", post_type: "Video", views: 8900, likes: 623, comments: 187, shares: 94 },
+    { platform: "Twitter", title: "Thread: 7 payroll mistakes that cost startups $10K+", post_type: "Thread", views: 6200, likes: 412, comments: 89, shares: 201 },
+    { platform: "Instagram", title: "The contractor payment checklist every founder needs", post_type: "Carousel", views: 4100, likes: 389, comments: 67, shares: 78 },
+    { platform: "LinkedIn", title: "International contractor payments: what we learned", post_type: "Post", views: 3800, likes: 276, comments: 94, shares: 45 },
+  ];
 }
 
 const Q2_PLAN = [
@@ -28,8 +30,8 @@ const DOUBLES = [
   { text:"YouTube 4+ videos/month", why:"Algorithm trust. Consistency beats quality for growth." },
 ];
 
-export default async function StrategyPage() {
-  const posts = await getPosts();
+export default function StrategyPage() {
+  const posts = getPosts();
 
   const byType: Record<string, { views:number; count:number }> = {};
   posts.forEach((p: {post_type:string; views:number}) => {

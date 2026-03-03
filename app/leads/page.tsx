@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+"use client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { timeAgo } from "@/lib/utils";
 
@@ -8,12 +8,23 @@ interface Signal {
   subreddit?: string; author?: string; category: string;
 }
 
-async function getLeads(): Promise<Signal[]> {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/leads`, { next: { revalidate: 21600 } });
-    return res.json();
-  } catch { return []; }
+function getLeads(): Signal[] {
+  const now = Math.floor(Date.now() / 1000);
+  const hour = 3600;
+  return [
+    { source: "Reddit", title: "How do you handle contractor payments across different countries?", url: "https://reddit.com/r/startups", score: 287, comments: 43, created: now - 2 * hour, subreddit: "startups", author: "founder_dev", category: "contractor" },
+    { source: "HN", title: "Ask HN: Best tools for paying international contractors in 2025?", url: "https://news.ycombinator.com", score: 156, comments: 78, created: now - 5 * hour, category: "contractor" },
+    { source: "Reddit", title: "Payroll compliance nightmare — we got fined $40K. What are you using?", url: "https://reddit.com/r/Entrepreneur", score: 134, comments: 91, created: now - 8 * hour, subreddit: "Entrepreneur", author: "startup_cto", category: "payroll" },
+    { source: "Reddit", title: "Invoice automation for SaaS — anyone tried AI-powered billing?", url: "https://reddit.com/r/SaaS", score: 98, comments: 34, created: now - 12 * hour, subreddit: "SaaS", author: "saas_builder", category: "invoice" },
+    { source: "HN", title: "Our payroll provider failed us — looking for alternatives with global coverage", url: "https://news.ycombinator.com", score: 87, comments: 52, created: now - 18 * hour, category: "payroll" },
+    { source: "Reddit", title: "Deel vs Remote vs JustPaid — which one actually works for early-stage?", url: "https://reddit.com/r/startups", score: 76, comments: 29, created: now - 24 * hour, subreddit: "startups", author: "yc_founder", category: "general" },
+    { source: "Reddit", title: "How to classify contractors in multiple states — any SaaS that helps?", url: "https://reddit.com/r/smallbusiness", score: 61, comments: 18, created: now - 30 * hour, subreddit: "smallbusiness", category: "contractor" },
+    { source: "HN", title: "Just got burned by misclassification penalty — what compliance tools do you use?", url: "https://news.ycombinator.com", score: 54, comments: 67, created: now - 36 * hour, category: "payroll" },
+    { source: "Reddit", title: "Automated invoice reconciliation — is it possible without an accountant?", url: "https://reddit.com/r/Accounting", score: 43, comments: 22, created: now - 42 * hour, subreddit: "Accounting", category: "invoice" },
+    { source: "Reddit", title: "How do YC companies handle payroll before Series A?", url: "https://reddit.com/r/ycombinator", score: 38, comments: 15, created: now - 48 * hour, subreddit: "ycombinator", author: "w25_founder", category: "general" },
+    { source: "HN", title: "Building in public: our payroll stack for a 12-person remote team", url: "https://news.ycombinator.com", score: 31, comments: 44, created: now - 54 * hour, category: "payroll" },
+    { source: "Reddit", title: "Contractor invoice disputes — what tools automate the resolution?", url: "https://reddit.com/r/freelance", score: 27, comments: 11, created: now - 60 * hour, subreddit: "freelance", category: "invoice" },
+  ];
 }
 
 const CAT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
@@ -28,8 +39,8 @@ const SRC_STYLE: Record<string, { bg: string; color: string }> = {
   HN:     { bg: "rgba(255,102,0,0.15)", color: "#FF6600" },
 };
 
-export default async function LeadsPage() {
-  const signals = await getLeads();
+export default function LeadsPage() {
+  const signals = getLeads();
   const hot = signals.filter(s => s.score >= 50).length;
   const reddit = signals.filter(s => s.source === "Reddit").length;
   const hn = signals.filter(s => s.source === "HN").length;

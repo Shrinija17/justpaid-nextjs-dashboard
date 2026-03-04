@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JustPaid — Social Media Intelligence Review</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=archivo@700,900&f[]=space-grotesk@400,500,700&display=swap">
+<style>
+  :root {
+    --bg: #09090b; --bg2: #12121a; --card: #18181b;
+    --text: #fafafa; --text2: #a1a1aa; --muted: #52525b;
+    --accent: #818cf8; --glow: rgba(129,140,248,0.3);
+    --cyan: #06b6d4; --green: #22c55e; --red: #ef4444;
+    --pink: #f472b6; --orange: #f97316; --yellow: #fbbf24;
+    --blue: #3b82f6;
+    --border: rgba(255,255,255,0.06);
+    --title: clamp(2.2rem, 5.5vw, 4.2rem);
+    --h2: clamp(1.5rem, 3.5vw, 2.6rem);
+    --body: clamp(0.85rem, 1.4vw, 1.1rem);
+    --sm: clamp(0.7rem, 1vw, 0.85rem);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-snap-type:y mandatory; scroll-behavior:smooth; overflow-x:hidden; }
+  body { font-family:'Space Grotesk',system-ui,sans-serif; background:var(--bg); color:var(--text); }
+
+  .slide {
+    width:100vw; height:100vh; height:100dvh;
+    overflow:hidden; scroll-snap-align:start;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:clamp(2rem,5vw,5rem); position:relative;
+  }
+  .slide::before {
+    content:''; position:absolute; inset:0; opacity:0.5; pointer-events:none;
+    background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(99,102,241,0.06), transparent 70%);
+  }
+
+  .grad { background:linear-gradient(135deg,#818cf8 0%,#06b6d4 50%,#22c55e 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .grad-warm { background:linear-gradient(135deg,#f97316 0%,#f472b6 50%,#818cf8 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+  .tag { display:inline-block; font-size:var(--sm); font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:1rem; }
+  h1 { font-family:'Archivo',system-ui,sans-serif; font-size:var(--title); font-weight:900; line-height:1.1; letter-spacing:-1px; text-align:center; max-width:950px; }
+  h2 { font-family:'Archivo',system-ui,sans-serif; font-size:var(--h2); font-weight:900; line-height:1.15; letter-spacing:-0.5px; text-align:center; max-width:850px; }
+  .sub { font-size:var(--body); color:var(--text2); text-align:center; max-width:660px; margin-top:1.2rem; line-height:1.7; }
+
+  /* Cards */
+  .card-grid { display:grid; gap:1rem; margin-top:2rem; width:100%; max-width:1050px; }
+  .g2 { grid-template-columns:1fr 1fr; }
+  .g3 { grid-template-columns:1fr 1fr 1fr; }
+  .g4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+  .card {
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:1.5rem; position:relative; overflow:hidden;
+  }
+  .card-label { font-size:0.65rem; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:0.5rem; }
+  .card-value { font-family:'Archivo',sans-serif; font-size:1.8rem; font-weight:900; }
+  .card-sub { font-size:0.82rem; color:var(--text2); margin-top:0.4rem; line-height:1.6; }
+
+  /* Insight callout */
+  .insight {
+    background:linear-gradient(135deg, rgba(99,102,241,0.1), rgba(6,182,212,0.06));
+    border:1px solid rgba(99,102,241,0.15); border-radius:14px;
+    padding:1.25rem 1.75rem; max-width:750px; margin-top:2rem; text-align:center;
+  }
+  .insight-label { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--accent); margin-bottom:0.5rem; }
+  .insight p { font-size:0.9rem; color:var(--text2); line-height:1.7; }
+  .insight strong { color:var(--text); }
+
+  /* Platform header */
+  .platform-header { display:flex; align-items:center; gap:1rem; margin-bottom:0.5rem; }
+  .platform-icon { font-size:2rem; }
+  .platform-name { font-family:'Archivo',sans-serif; font-size:1.6rem; font-weight:900; }
+
+  /* Metric row */
+  .metric-row { display:flex; gap:2.5rem; margin-top:1.5rem; flex-wrap:wrap; justify-content:center; }
+  .metric { text-align:center; }
+  .metric-num { font-family:'Archivo',sans-serif; font-size:2rem; font-weight:900; }
+  .metric-label { font-size:0.68rem; color:var(--text2); margin-top:0.2rem; text-transform:uppercase; letter-spacing:1px; font-weight:500; }
+
+  /* Divider */
+  .divider { width:1px; height:40px; background:var(--border); }
+
+  /* Bar chart (CSS) */
+  .bar-chart { display:flex; flex-direction:column; gap:0.6rem; max-width:500px; width:100%; margin-top:1.5rem; }
+  .bar-row { display:flex; align-items:center; gap:0.75rem; }
+  .bar-label { font-size:0.78rem; font-weight:600; width:80px; text-align:right; flex-shrink:0; }
+  .bar-track { flex:1; height:28px; background:rgba(255,255,255,0.04); border-radius:6px; overflow:hidden; position:relative; }
+  .bar-fill { height:100%; border-radius:6px; display:flex; align-items:center; padding-left:0.75rem; font-size:0.72rem; font-weight:700; color:rgba(255,255,255,0.9); transition:width 1s ease; }
+  .bar-val { font-size:0.75rem; color:var(--text2); width:50px; text-align:left; flex-shrink:0; margin-left:0.5rem; }
+
+  /* Roadmap */
+  .road-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; max-width:950px; width:100%; margin-top:2rem; }
+  .road-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; }
+  .road-phase { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:0.5rem; }
+  .road-title { font-weight:800; font-size:1rem; margin-bottom:0.75rem; }
+  .road-list { list-style:none; padding:0; }
+  .road-list li { font-size:0.78rem; color:var(--text2); padding:0.3rem 0; line-height:1.5; display:flex; align-items:flex-start; gap:0.5rem; }
+  .road-list li::before { content:'→'; color:var(--accent); font-weight:700; flex-shrink:0; }
+
+  /* Pill */
+  .pill-row { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1rem; justify-content:center; }
+  .pill {
+    display:inline-flex; align-items:center; gap:0.4rem;
+    padding:0.45rem 0.9rem; border-radius:100px;
+    font-size:0.72rem; font-weight:600;
+    background:rgba(99,102,241,0.08); border:1px solid rgba(99,102,241,0.15); color:var(--accent);
+  }
+
+  .slide-num { position:absolute; bottom:2rem; right:2.5rem; font-size:0.65rem; color:var(--muted); font-weight:500; letter-spacing:1px; }
+
+  /* Speaker notes */
+  .notes-toggle {
+    position:fixed; bottom:1rem; left:1rem; z-index:100;
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    padding:0.4rem 0.8rem; font-size:0.7rem; color:var(--text2);
+    cursor:pointer; font-family:inherit;
+  }
+  .notes-toggle:hover { color:var(--text); border-color:var(--accent); }
+  .speaker-notes {
+    display:none; position:fixed; bottom:3rem; left:1rem; right:1rem; z-index:99;
+    background:rgba(0,0,0,0.95); border:1px solid var(--border); border-radius:12px;
+    padding:1.25rem 1.5rem; font-size:0.82rem; color:var(--text2); line-height:1.7;
+    max-height:180px; overflow-y:auto; backdrop-filter:blur(20px);
+  }
+  .notes-visible .speaker-notes { display:block; }
+
+  .fade-up { opacity:0; transform:translateY(30px); transition:all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .fade-up.visible { opacity:1; transform:translateY(0); }
+  .delay-1 { transition-delay:0.15s; }
+  .delay-2 { transition-delay:0.3s; }
+  .delay-3 { transition-delay:0.45s; }
+  .delay-4 { transition-delay:0.6s; }
+
+  @media (max-width:768px) {
+    .g2,.g3,.g4,.road-grid { grid-template-columns:1fr; }
+    .metric-row { gap:1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SLIDE 1: TITLE ===== -->
+<section class="slide" style="background:radial-gradient(ellipse 60% 50% at 50% 45%, rgba(99,102,241,0.1), transparent 70%);">
+  <div class="fade-up">
+    <div class="tag">JustPaid · Marketing Intelligence</div>
+  </div>
+  <h1 class="fade-up delay-1">
+    Social Media<br><span class="grad">Where We Stand</span>
+  </h1>
+  <p class="sub fade-up delay-2">A data-driven review of JustPaid's social presence,<br>content performance, and growth opportunities.</p>
+  <div style="margin-top:2.5rem;" class="fade-up delay-3">
+    <div style="font-size:0.8rem; color:var(--muted);">Shrinija Kummari · March 2026</div>
+  </div>
+  <div class="slide-num">01 / 11</div>
+  <div class="speaker-notes">"I put together a deep analysis of where we stand on social media — what's working, where we're leaving value on the table, and what I think we should focus on next. All of this is backed by real data I've been tracking."</div>
+</section>
+
+<!-- ===== SLIDE 2: THE FULL PICTURE ===== -->
+<section class="slide">
+  <div class="fade-up"><div class="tag">Our digital footprint</div></div>
+  <h2 class="fade-up delay-1"><span class="grad">3,777</span> followers<br>across 4 platforms</h2>
+  <div class="card-grid g4 fade-up delay-2" style="max-width:950px;">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:1.3rem; margin-bottom:0.4rem;">💼</div>
+      <div class="card-label" style="color:var(--blue);">LinkedIn</div>
+      <div class="card-value" style="color:var(--blue);">2,858</div>
+      <div class="card-sub">75.7% of total audience</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:1.3rem; margin-bottom:0.4rem;">▶️</div>
+      <div class="card-label" style="color:var(--red);">YouTube</div>
+      <div class="card-value" style="color:var(--red);">685</div>
+      <div class="card-sub">18.1% · 106 videos</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:1.3rem; margin-bottom:0.4rem;">𝕏</div>
+      <div class="card-label">Twitter / X</div>
+      <div class="card-value">142</div>
+      <div class="card-sub">3.8% · highest engagement</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:1.3rem; margin-bottom:0.4rem;">📸</div>
+      <div class="card-label" style="color:var(--pink);">Instagram</div>
+      <div class="card-value" style="color:var(--pink);">92</div>
+      <div class="card-sub">2.4% · early stage</div>
+    </div>
+  </div>
+  <div class="insight fade-up delay-3">
+    <div class="insight-label">Key takeaway</div>
+    <p><strong>LinkedIn is 76% of our audience.</strong> For a B2B fintech selling to finance teams, that's exactly where our buyers live. But our other channels have untapped signals worth paying attention to.</p>
+  </div>
+  <div class="slide-num">02 / 11</div>
+  <div class="speaker-notes">"Here's the full picture. 3,777 followers total. LinkedIn dominates at 76% — which makes sense for B2B fintech. But the interesting story is in the details of each platform."</div>
+</section>
+
+<!-- ===== SLIDE 3: LINKEDIN DEEP-DIVE ===== -->
+<section class="slide">
+  <div class="fade-up">
+    <div class="platform-header" style="justify-content:center;">
+      <div class="platform-icon">💼</div>
+      <div class="platform-name" style="color:var(--blue);">LinkedIn</div>
+    </div>
+    <div style="font-size:0.85rem; color:var(--text2); text-align:center;">Our primary growth engine · 12 months of data</div>
+  </div>
+  <div class="metric-row fade-up delay-1">
+    <div class="metric">
+      <div class="metric-num" style="color:var(--blue);">2,858</div>
+      <div class="metric-label">Followers</div>
+    </div>
+    <div class="divider"></div>
+    <div class="metric">
+      <div class="metric-num">568K</div>
+      <div class="metric-label">Impressions (1yr)</div>
+    </div>
+    <div class="divider"></div>
+    <div class="metric">
+      <div class="metric-num" style="color:var(--green);">1,333</div>
+      <div class="metric-label">Reactions</div>
+    </div>
+    <div class="divider"></div>
+    <div class="metric">
+      <div class="metric-num">97</div>
+      <div class="metric-label">Comments</div>
+    </div>
+    <div class="divider"></div>
+    <div class="metric">
+      <div class="metric-num" style="color:var(--cyan);">1,147</div>
+      <div class="metric-label">New followers (1yr)</div>
+    </div>
+  </div>
+  <div class="card-grid g2 fade-up delay-2" style="margin-top:2rem; max-width:800px;">
+    <div class="card">
+      <div class="card-label" style="color:var(--green);">What's working</div>
+      <div class="card-sub" style="margin-top:0;"><strong style="color:var(--text);">568K impressions</strong> means our content is getting seen. 234 posts in the last year — consistent cadence. Thought leadership and product updates drive the most reactions.</div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--orange);">The gap</div>
+      <div class="card-sub" style="margin-top:0;"><strong style="color:var(--text);">97 comments on 234 posts</strong> — that's 0.4 comments per post. Impressions are high but conversations are low. We're broadcasting, not engaging. That's fixable.</div>
+    </div>
+  </div>
+  <div class="slide-num">03 / 11</div>
+  <div class="speaker-notes">"LinkedIn is clearly our engine — 568K impressions, over 1,100 new followers in the past year. But here's the interesting thing: 97 comments across 234 posts means we're getting eyeballs but not conversations. People see us, but they're not talking back. That gap between impressions and engagement? That's where the growth opportunity is."</div>
+</section>
+
+<!-- ===== SLIDE 4: YOUTUBE ===== -->
+<section class="slide">
+  <div class="fade-up">
+    <div class="platform-header" style="justify-content:center;">
+      <div class="platform-icon">▶️</div>
+      <div class="platform-name" style="color:var(--red);">YouTube</div>
+    </div>
+    <div style="font-size:0.85rem; color:var(--text2); text-align:center;">Long-form content library · 106 videos since July 2025</div>
+  </div>
+  <div class="metric-row fade-up delay-1">
+    <div class="metric">
+      <div class="metric-num" style="color:var(--red);">685</div>
+      <div class="metric-label">Subscribers</div>
+    </div>
+    <div class="divider"></div>
+    <div class="metric">
+      <div class="metric-num">106</div>
+      <div class="metric-label">Videos</div>
+    </div>
+    <div class="divider"></div>
+    <div class="metric">
+      <div class="metric-num">0.9%</div>
+      <div class="metric-label">Engagement Rate</div>
+    </div>
+  </div>
+  <div class="card-grid g2 fade-up delay-2" style="margin-top:2rem; max-width:800px;">
+    <div class="card">
+      <div class="card-label" style="color:var(--green);">The asset</div>
+      <div class="card-sub" style="margin-top:0;"><strong style="color:var(--text);">106 videos is a real content library.</strong> Podcasts with founders, product walkthroughs, thought leadership — this is evergreen content that compounds. Most startups at our stage have 10-15 videos.</div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--orange);">The opportunity</div>
+      <div class="card-sub" style="margin-top:0;"><strong style="color:var(--text);">0.9% engagement means distribution needs work.</strong> The content exists — it's just not being repurposed. One podcast episode can become 10+ LinkedIn posts, clips for X, quote cards for Instagram.</div>
+    </div>
+  </div>
+  <div class="insight fade-up delay-3">
+    <p><strong>We've invested heavily in creating content.</strong> The next step isn't making more — it's getting more out of what we already have.</p>
+  </div>
+  <div class="slide-num">04 / 11</div>
+  <div class="speaker-notes">"YouTube is interesting because we've built something most startups at our stage don't have — 106 videos. That's a real content library. But the engagement rate at 0.9% tells me the content isn't being distributed well. The opportunity isn't to make more videos — it's to repurpose what we already have. One podcast can become 10 LinkedIn posts, short clips for X, quote cards for Instagram."</div>
+</section>
+
+<!-- ===== SLIDE 5: TWITTER + INSTAGRAM ===== -->
+<section class="slide">
+  <div class="fade-up"><div class="tag">The smaller channels</div></div>
+  <h2 class="fade-up delay-1">Twitter & Instagram:<br><span class="grad-warm">Different stories, same signal</span></h2>
+  <div class="card-grid g2 fade-up delay-2" style="max-width:850px;">
+    <div class="card">
+      <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+        <div style="font-size:1.3rem;">𝕏</div>
+        <div style="font-weight:800;">Twitter / X</div>
+      </div>
+      <div style="display:flex; gap:2rem; margin-bottom:1rem;">
+        <div><div style="font-family:'Archivo',sans-serif; font-size:1.5rem; font-weight:900;">142</div><div style="font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px;">Followers</div></div>
+        <div><div style="font-family:'Archivo',sans-serif; font-size:1.5rem; font-weight:900; color:var(--green);">7.7%</div><div style="font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px;">Engagement</div></div>
+        <div><div style="font-family:'Archivo',sans-serif; font-size:1.5rem; font-weight:900;">15.8K</div><div style="font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px;">Impressions</div></div>
+      </div>
+      <div class="card-sub"><strong style="color:var(--text);">7.7% engagement is exceptional.</strong> Industry average for B2B fintech on X is 1-2%. Our small audience is deeply engaged — 455 likes, 53 replies, 50 reposts on 382 posts. This is a quality audience.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+        <div style="font-size:1.3rem;">📸</div>
+        <div style="font-weight:800; color:var(--pink);">Instagram</div>
+      </div>
+      <div style="display:flex; gap:2rem; margin-bottom:1rem;">
+        <div><div style="font-family:'Archivo',sans-serif; font-size:1.5rem; font-weight:900; color:var(--pink);">92</div><div style="font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px;">Followers</div></div>
+        <div><div style="font-family:'Archivo',sans-serif; font-size:1.5rem; font-weight:900; color:var(--green);">3.0%</div><div style="font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px;">Engagement</div></div>
+        <div><div style="font-family:'Archivo',sans-serif; font-size:1.5rem; font-weight:900;">8.4K</div><div style="font-size:0.65rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px;">Views (90d)</div></div>
+      </div>
+      <div class="card-sub"><strong style="color:var(--text);">8,400 views with 92 followers</strong> means non-followers are discovering us. 3% engagement is healthy. This channel is early — but the signal is there. With consistent content, this scales.</div>
+    </div>
+  </div>
+  <div class="insight fade-up delay-3">
+    <p><strong>Small follower counts ≠ low value.</strong> High engagement rates on both channels mean the people who do follow us actually care. That's a foundation you can build on.</p>
+  </div>
+  <div class="slide-num">05 / 11</div>
+  <div class="speaker-notes">"Twitter has only 142 followers but 7.7% engagement — that's 4-5x the industry average. Those 142 people really care about what we're saying. Instagram is early at 92, but 8,400 views in 90 days means people outside our followers are finding us. The takeaway: small numbers can be misleading. These are quality audiences worth investing in."</div>
+</section>
+
+
+<!-- ===== SLIDE 7: CONTENT ANALYSIS ===== -->
+<section class="slide">
+  <div class="fade-up"><div class="tag">Content performance</div></div>
+  <h2 class="fade-up delay-1">What content actually works</h2>
+  <p class="sub fade-up delay-2">Analyzed 309 posts across all platforms</p>
+  <div class="card-grid g3 fade-up delay-3" style="max-width:900px;">
+    <div class="card">
+      <div style="font-size:1.5rem; margin-bottom:0.5rem;">🏆</div>
+      <div style="font-weight:800; font-size:0.95rem; margin-bottom:0.5rem;">Highest performers</div>
+      <div class="card-sub">Partnership announcements and industry thought leadership. Posts about <strong style="color:var(--text);">real trends</strong> (AI in finance, compliance complexity) consistently outperform product updates.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:1.5rem; margin-bottom:0.5rem;">📊</div>
+      <div style="font-weight:800; font-size:0.95rem; margin-bottom:0.5rem;">Content mix</div>
+      <div class="card-sub"><strong style="color:var(--text);">7 published blog posts</strong> covering AI pricing disruption, autonomous agents in finance, and industry guides. Plus social packages for each — structured distribution, not just publishing.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:1.5rem; margin-bottom:0.5rem;">🔍</div>
+      <div style="font-weight:800; font-size:0.95rem; margin-bottom:0.5rem;">SEO & competitive</div>
+      <div class="card-sub">Full <strong style="color:var(--text);">SEMrush competitive analysis</strong>. Mapped keyword gaps against 12 competitors — Chargebee, Stripe Billing, Zuora, Recurly, Maxio, and 7 others. Created comparison assets for each.</div>
+    </div>
+  </div>
+  <div class="insight fade-up delay-4">
+    <p><strong>Pattern:</strong> Content that positions JustPaid as a thought leader (not just a product) gets 3-5x more engagement than feature-focused posts.</p>
+  </div>
+  <div class="slide-num">06 / 11</div>
+  <div class="speaker-notes">"I analyzed all 309 posts across platforms. The clear pattern: thought leadership beats product marketing every time. Posts about real industry trends get 3-5x more engagement than feature updates. That's why I focused the blog strategy around AI in finance, pricing disruption, autonomous agents — topics where JustPaid has a genuine perspective. I also did a full competitive SEO analysis across 12 competitors to find content gaps we can own."</div>
+</section>
+
+<!-- ===== SLIDE 8: PRICING WORK ===== -->
+<section class="slide">
+  <div class="fade-up"><div class="tag">Strategic analysis</div></div>
+  <h2 class="fade-up delay-1">Pricing Strategy:<br><span class="grad">Usage-Based Model</span></h2>
+  <p class="sub fade-up delay-2">Researched the competitive landscape and modeled a new pricing framework.</p>
+  <div class="card-grid g3 fade-up delay-3" style="max-width:900px;">
+    <div class="card" style="text-align:center;">
+      <div class="card-value" style="font-size:1.5rem;">12</div>
+      <div class="card-sub">Competitors benchmarked<br><span style="font-size:0.72rem; color:var(--muted);">Stripe, Chargebee, Zuora, Maxio, Recurly, Bill.com + 6 more</span></div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="card-value" style="font-size:1.5rem;">4</div>
+      <div class="card-sub">Pricing iterations<br><span style="font-size:0.72rem; color:var(--muted);">PLG → Research-Backed → Hybrid → Usage-Based</span></div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="card-value" style="font-size:1.5rem; color:var(--green);">120-135%</div>
+      <div class="card-sub">Target NRR<br><span style="font-size:0.72rem; color:var(--muted);">vs. ~110-115% with current revenue-based model</span></div>
+    </div>
+  </div>
+  <div class="card-grid g2 fade-up delay-4" style="max-width:800px; margin-top:1rem;">
+    <div class="card">
+      <div class="card-label" style="color:var(--cyan);">The core insight</div>
+      <div class="card-sub" style="margin-top:0;">Revenue-based pricing ties cost to a proxy for value. <strong style="color:var(--text);">Usage-based pricing (AI Actions)</strong> ties cost to the actual work JustPaid performs — invoices created, reminders sent, contracts parsed. Customers see exactly what their money buys.</div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--green);">Why it matters</div>
+      <div class="card-sub" style="margin-top:0;">Usage-based SaaS companies average <strong style="color:var(--text);">120-140% NRR</strong> vs. 110-120% for tier-based. That 15-point difference compounds massively — each cohort generates 2.2x revenue after 3 years vs. 1.5x.</div>
+    </div>
+  </div>
+  <div class="slide-num">07 / 11</div>
+  <div class="speaker-notes">"I also spent significant time on pricing. Benchmarked 12 competitors, went through 4 iterations, and landed on a usage-based model built around AI Actions — the actual tasks JustPaid performs. The key metric here is NRR. Usage-based models consistently hit 120-135% versus 110-115% for tier-based. Over 3 years that's the difference between each customer cohort being worth 1.5x or 2.2x their original value. I have the full analysis documented if you want to dig deeper."</div>
+</section>
+
+<!-- ===== SLIDE 9: INFRASTRUCTURE ===== -->
+<section class="slide">
+  <div class="fade-up"><div class="tag">Behind the numbers</div></div>
+  <h2 class="fade-up delay-1">How I got this data</h2>
+  <p class="sub fade-up delay-2">None of this existed before. I built the infrastructure to track it.</p>
+  <div class="card-grid g2 fade-up delay-3" style="max-width:850px;">
+    <div class="card">
+      <div style="font-size:1.3rem; margin-bottom:0.5rem;">📡</div>
+      <div style="font-weight:800; margin-bottom:0.5rem;">Data Collection</div>
+      <div class="card-sub">Connected to YouTube's API for automated video + subscriber tracking. Built custom tools to pull LinkedIn analytics (impressions, reactions, follower growth). Tracked Instagram and Twitter metrics systematically.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:1.3rem; margin-bottom:0.5rem;">🏗️</div>
+      <div style="font-weight:800; margin-bottom:0.5rem;">Centralized Data Warehouse</div>
+      <div class="card-sub">All social data flows into one place — Google BigQuery. Every metric you've seen in this presentation comes from a single source of truth, not screenshots and spreadsheets.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:1.3rem; margin-bottom:0.5rem;">📊</div>
+      <div style="font-weight:800; margin-bottom:0.5rem;">Live Dashboard</div>
+      <div class="card-sub">Built a real-time dashboard showing all 4 platforms with follower growth, engagement trends, content performance, and quarter-over-quarter comparisons. <strong style="color:var(--text);">It's live right now.</strong></div>
+    </div>
+    <div class="card">
+      <div style="font-size:1.3rem; margin-bottom:0.5rem;">🔄</div>
+      <div style="font-weight:800; margin-bottom:0.5rem;">Repeatable Process</div>
+      <div class="card-sub">This isn't a one-time analysis. The system updates with fresh data. Next month's review will take minutes instead of days because the infrastructure exists.</div>
+    </div>
+  </div>
+  <div class="slide-num">08 / 11</div>
+  <div class="speaker-notes">"Quick note on how I got all this data. Before this, there was no centralized way to track our social performance. I set up API connections for YouTube, built tools to pull LinkedIn analytics, and connected everything into a single data warehouse. There's a live dashboard you can check anytime. The important thing is this isn't a one-time effort — the system keeps updating. Next month's analysis takes minutes, not days."</div>
+</section>
+
+<!-- ===== SLIDE 10: KEY INSIGHTS ===== -->
+<section class="slide" style="background:radial-gradient(ellipse 60% 50% at 50% 50%, rgba(34,197,94,0.06), transparent 70%);">
+  <div class="fade-up"><div class="tag" style="color:var(--green);">Key insights</div></div>
+  <h2 class="fade-up delay-1">Five things the data tells us</h2>
+  <div style="display:flex; flex-direction:column; gap:0.75rem; max-width:700px; width:100%; margin-top:2rem;" class="fade-up delay-2">
+    <div style="display:flex; gap:1rem; align-items:flex-start; padding:0.75rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:12px;">
+      <div style="font-size:1.1rem; font-weight:900; color:var(--accent); flex-shrink:0; width:28px;">01</div>
+      <div style="font-size:0.88rem; color:var(--text2); line-height:1.6;"><strong style="color:var(--text);">LinkedIn is our moat</strong> — 76% of our audience, B2B buyers, 568K annual impressions. Double down here.</div>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:flex-start; padding:0.75rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:12px;">
+      <div style="font-size:1.1rem; font-weight:900; color:var(--accent); flex-shrink:0; width:28px;">02</div>
+      <div style="font-size:0.88rem; color:var(--text2); line-height:1.6;"><strong style="color:var(--text);">We have a content goldmine in YouTube</strong> — 106 videos barely being repurposed. Each one is 10+ pieces of social content waiting to happen.</div>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:flex-start; padding:0.75rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:12px;">
+      <div style="font-size:1.1rem; font-weight:900; color:var(--accent); flex-shrink:0; width:28px;">03</div>
+      <div style="font-size:0.88rem; color:var(--text2); line-height:1.6;"><strong style="color:var(--text);">Thought leadership > product marketing</strong> — industry perspective content gets 3-5x the engagement of feature posts.</div>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:flex-start; padding:0.75rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:12px;">
+      <div style="font-size:1.1rem; font-weight:900; color:var(--accent); flex-shrink:0; width:28px;">04</div>
+      <div style="font-size:0.88rem; color:var(--text2); line-height:1.6;"><strong style="color:var(--text);">Twitter's engagement is a hidden strength</strong> — 7.7% is 4x industry average. This is where fintech decision-makers have real-time conversations.</div>
+    </div>
+    <div style="display:flex; gap:1rem; align-items:flex-start; padding:0.75rem 1rem; background:var(--card); border:1px solid var(--border); border-radius:12px;">
+      <div style="font-size:1.1rem; font-weight:900; color:var(--accent); flex-shrink:0; width:28px;">05</div>
+      <div style="font-size:0.88rem; color:var(--text2); line-height:1.6;"><strong style="color:var(--text);">We need data-driven decisions, not guesswork</strong> — with tracking infrastructure in place, every content and growth decision can now be measured.</div>
+    </div>
+  </div>
+  <div class="slide-num">09 / 11</div>
+  <div class="speaker-notes">"Five things I think matter most. LinkedIn is our moat — protect it and grow it. YouTube is an untapped content goldmine. Thought leadership crushes product marketing on engagement. Twitter's small audience is disproportionately valuable. And most importantly — now that we have data infrastructure, we can stop guessing and start measuring."</div>
+</section>
+
+<!-- ===== SLIDE 11: RECOMMENDATIONS ===== -->
+<section class="slide">
+  <div class="fade-up"><div class="tag">Looking ahead</div></div>
+  <h2 class="fade-up delay-1">What I'd focus on<br><span class="grad">next 90 days</span></h2>
+  <div class="road-grid fade-up delay-2">
+    <div class="road-card">
+      <div class="road-phase" style="color:var(--accent);">Near-term</div>
+      <div class="road-title">Amplify LinkedIn</div>
+      <ul class="road-list">
+        <li>Shift from broadcasting to engagement-driven content</li>
+        <li>Repurpose top YouTube content into LinkedIn posts</li>
+        <li>Weekly data-backed content calendar</li>
+        <li>Target: increase comments 3x</li>
+      </ul>
+    </div>
+    <div class="road-card">
+      <div class="road-phase" style="color:var(--cyan);">Mid-term</div>
+      <div class="road-title">Content Engine</div>
+      <ul class="road-list">
+        <li>Systematic YouTube → multi-platform repurposing</li>
+        <li>Grow Twitter presence (fintech conversations)</li>
+        <li>Competitive content monitoring</li>
+        <li>Weekly automated performance reports</li>
+      </ul>
+    </div>
+    <div class="road-card">
+      <div class="road-phase" style="color:var(--green);">90-day goal</div>
+      <div class="road-title">Measurable Growth</div>
+      <ul class="road-list">
+        <li>LinkedIn: 3,500+ followers, 3x comment rate</li>
+        <li>Twitter: 300+ followers, maintain 5%+ engagement</li>
+        <li>YouTube engagement from 0.9% → 2%+</li>
+        <li>Every decision backed by data</li>
+      </ul>
+    </div>
+  </div>
+  <div class="insight fade-up delay-3">
+    <p>The infrastructure is built. The data is flowing. <strong>Now it's about turning insights into growth.</strong></p>
+  </div>
+  <div class="slide-num">10 / 11</div>
+  <div class="speaker-notes">"Here's what I'd recommend. Near-term: shift LinkedIn from broadcasting to conversation. Repurpose our best YouTube content. Mid-term: build a systematic content engine, grow Twitter, set up automated reporting. By 90 days: LinkedIn to 3,500, Twitter to 300, YouTube engagement doubled. And every decision measured. The foundation is built — now it's about execution."</div>
+</section>
+
+<!-- ===== SLIDE 12: CLOSE ===== -->
+<section class="slide" style="background:radial-gradient(ellipse 60% 50% at 50% 45%, rgba(99,102,241,0.1), transparent 70%);">
+  <div class="fade-up">
+    <div class="tag">Thank you</div>
+  </div>
+  <h1 class="fade-up delay-1" style="font-size:clamp(1.8rem,4vw,3rem);">
+    The data is here.<br>
+    <span class="grad">Let's use it.</span>
+  </h1>
+  <p class="sub fade-up delay-2">Live dashboard → justpaid-nextjs-dashboard-chi.vercel.app</p>
+  <div style="margin-top:2.5rem;" class="fade-up delay-3">
+    <div style="font-weight:700; font-size:1rem;">Shrinija Kummari</div>
+    <div style="font-size:0.8rem; color:var(--text2); margin-top:0.3rem;">Questions?</div>
+  </div>
+  <div class="slide-num">11 / 11</div>
+  <div class="speaker-notes">"That's where we stand. The data infrastructure is live, the analysis is ongoing, and I have a lot of ideas about where to take this. Happy to dig into any of these areas. Thank you."</div>
+</section>
+
+<button class="notes-toggle" onclick="document.body.classList.toggle('notes-visible')">💬 Speaker Notes</button>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  const slides = document.querySelectorAll('.slide');
+  const notesObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && document.body.classList.contains('notes-visible')) {
+        document.querySelectorAll('.speaker-notes').forEach(n => n.style.display = 'none');
+        const notes = entry.target.querySelector('.speaker-notes');
+        if (notes) notes.style.display = 'block';
+      }
+    });
+  }, { threshold: 0.5 });
+  slides.forEach(s => notesObserver.observe(s));
+
+  document.querySelector('.notes-toggle').addEventListener('click', () => {
+    setTimeout(() => {
+      if (document.body.classList.contains('notes-visible')) {
+        slides.forEach(s => {
+          const rect = s.getBoundingClientRect();
+          if (rect.top >= -100 && rect.top < window.innerHeight / 2) {
+            const notes = s.querySelector('.speaker-notes');
+            if (notes) notes.style.display = 'block';
+          }
+        });
+      }
+    }, 50);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const idx = [...slides].findIndex(s => {
+      const r = s.getBoundingClientRect();
+      return r.top >= -100 && r.top < window.innerHeight / 2;
+    });
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      if (idx < slides.length - 1) slides[idx + 1].scrollIntoView({ behavior: 'smooth' });
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (idx > 0) slides[idx - 1].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+</script>
+</body>
+</html>

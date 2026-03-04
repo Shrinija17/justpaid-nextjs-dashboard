@@ -1,40 +1,11 @@
 export const dynamic = "force-dynamic";
 import DashboardLayout from "@/components/DashboardLayout";
 import KpiCard from "@/components/KpiCard";
-import GrowthChart from "@/components/GrowthChart";
-import EngagementChart from "@/components/EngagementChart";
+import { GrowthChartNoSSR as GrowthChart, EngagementChartNoSSR as EngagementChart } from "@/components/ChartsWrapper";
 import TopPostsTable from "@/components/TopPostsTable";
 import QoQSection from "@/components/QoQSection";
-import { PLATFORM_COLORS, PLATFORM_ICONS, fmt } from "@/lib/utils";
-
-async function getMetrics() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/metrics`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
-}
-async function getGrowth() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/growth`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
-}
-async function getPosts() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/posts`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return []; }
-}
-async function getQoQ() {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/qoq`, { next: { revalidate: 3600 } });
-    return res.json();
-  } catch { return null; }
-}
+import { PLATFORM_COLORS, fmt } from "@/lib/utils";
+import { getMetrics, getGrowth, getPosts, getQoQ } from "@/lib/queries";
 
 const PLATFORM_ORDER = ["YouTube", "Instagram", "LinkedIn", "Twitter"];
 
@@ -46,37 +17,35 @@ export default async function Home() {
     <DashboardLayout>
       {/* Hero header */}
       <div style={{
-        background: "linear-gradient(135deg,rgba(108,92,231,0.12) 0%,rgba(0,206,201,0.06) 100%)",
-        border: "1px solid rgba(108,92,231,0.18)", borderRadius: 20,
-        padding: "1.8rem 2rem", marginBottom: "2rem",
+        background: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(6,182,212,0.04) 100%)",
+        border: "1px solid rgba(99,102,241,0.12)", borderRadius: 20,
+        padding: "2rem 2.25rem", marginBottom: "2rem",
         display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem",
       }}>
         <div>
-          <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#6C5CE7", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "0.4rem" }}>
+          <div style={{ fontSize: "0.62rem", fontWeight: 600, color: "#6366f1", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "0.5rem" }}>
             JustPaid · Marketing Intelligence
           </div>
-          <h1 style={{ fontSize: "clamp(1.6rem,3vw,2.4rem)", fontWeight: 900, letterSpacing: "-1px", color: "#E2E2EA", margin: 0 }}>
+          <h1 style={{ fontSize: "clamp(1.6rem,3vw,2.2rem)", fontWeight: 800, letterSpacing: "-0.5px", color: "#fafafa", margin: 0 }}>
             Social Media{" "}
-            <span style={{ background: "linear-gradient(135deg,#6C5CE7,#A29BFE,#00CEC9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Command Center
-            </span>
+            <span className="grad-text">Command Center</span>
           </h1>
-          <p style={{ color: "#8A8A9A", fontSize: "0.85rem", marginTop: "0.3rem" }}>
-            Real-time performance across YouTube · Instagram · LinkedIn · X
+          <p style={{ color: "#71717a", fontSize: "0.85rem", marginTop: "0.4rem" }}>
+            Real-time performance across YouTube, Instagram, LinkedIn & X
           </p>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "0.68rem", color: "#5A5A6A" }}>Last updated</div>
-          <div style={{ fontSize: "0.85rem", color: "#E2E2EA", fontWeight: 600, marginTop: "0.2rem" }}>{now}</div>
+          <div style={{ fontSize: "0.68rem", color: "#52525b", fontWeight: 500 }}>Last updated</div>
+          <div style={{ fontSize: "0.85rem", color: "#e4e4e7", fontWeight: 600, marginTop: "0.2rem" }}>{now}</div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.6rem", justifyContent: "flex-end" }}>
-            <span style={{ background: "rgba(0,184,148,0.15)", color: "#00B894", fontSize: "0.62rem", fontWeight: 700, padding: "0.2rem 0.7rem", borderRadius: "20px" }}>● LIVE</span>
-            <span style={{ background: "rgba(108,92,231,0.12)", color: "#A29BFE", fontSize: "0.62rem", fontWeight: 700, padding: "0.2rem 0.7rem", borderRadius: "20px" }}>BigQuery</span>
+            <span className="badge badge-live" style={{ fontWeight: 700 }}>LIVE</span>
+            <span className="badge badge-source" style={{ fontWeight: 700 }}>BigQuery</span>
           </div>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1.2rem", marginBottom: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "1rem", marginBottom: "2rem" }}>
         {PLATFORM_ORDER.map(platform => {
           const m = metrics.find((r: {platform:string}) => r.platform === platform) || {};
           const followers = Number(m.followers || 0);
@@ -86,10 +55,9 @@ export default async function Home() {
           return (
             <KpiCard key={platform}
               platform={platform}
-              icon={PLATFORM_ICONS[platform]}
               color={PLATFORM_COLORS[platform]}
               value={fmt(followers)}
-              delta={`+${pct}% QoQ`}
+              delta={`${pct}% QoQ`}
               deltaPositive={change >= 0}
               sub="Engagement"
               subValue={`${engagement.toFixed(1)}%`}
@@ -99,20 +67,20 @@ export default async function Home() {
       </div>
 
       {/* Charts row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2rem" }}>
-        <div style={{ background: "#12121A", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "1.5rem" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#E2E2EA", marginBottom: "1rem" }}>📈 Follower Growth</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+        <div className="card">
+          <div className="section-title">Follower Growth</div>
           <GrowthChart data={growth} />
         </div>
-        <div style={{ background: "#12121A", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "1.5rem" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#E2E2EA", marginBottom: "1rem" }}>💥 Engagement Rate</div>
+        <div className="card">
+          <div className="section-title">Engagement Rate</div>
           <EngagementChart data={metrics} />
         </div>
       </div>
 
       {/* Top posts */}
-      <div style={{ background: "#12121A", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "1.5rem", marginBottom: "2rem" }}>
-        <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#E2E2EA", marginBottom: "1rem" }}>🏆 Top Performing Content</div>
+      <div className="card" style={{ marginBottom: "2rem" }}>
+        <div className="section-title">Top Performing Content</div>
         <TopPostsTable posts={posts} />
       </div>
 

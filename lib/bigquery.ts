@@ -21,7 +21,9 @@ export async function runQuery<T = Record<string, unknown>>(sql: string): Promis
   try {
     const bq = getBigQuery();
     const [rows] = await bq.query({ query: sql, location: "US" });
-    return rows as T[];
+    // Serialize to plain JSON to strip BigQuery-specific types (BigInt, Timestamp, etc.)
+    // that aren't compatible with React Server Component serialization
+    return JSON.parse(JSON.stringify(rows)) as T[];
   } catch (e) {
     console.error("BigQuery error:", e);
     return [];

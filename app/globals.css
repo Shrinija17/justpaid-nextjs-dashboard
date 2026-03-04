@@ -1,17 +1,101 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
 
 * { font-family: 'Inter', sans-serif; }
 html { scroll-behavior: smooth; }
-body { background: #0A0A0F; color: #E2E2EA; overflow-x: hidden; margin: 0; }
+
+body {
+  background: #09090b;
+  color: #fafafa;
+  overflow-x: hidden;
+  margin: 0;
+}
 
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0A0A0F; }
-::-webkit-scrollbar-thumb { background: rgba(108,92,231,0.4); border-radius: 2px; }
+::-webkit-scrollbar-track { background: #09090b; }
+::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 2px; }
 
+/* Card base */
+.card {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  border-color: #3f3f46;
+}
+
+/* Gradient text utility */
 .grad-text {
-  background: linear-gradient(135deg, #6C5CE7, #A29BFE, #00CEC9);
+  background: linear-gradient(135deg, #6366f1, #818cf8, #06b6d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Section header */
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Badge pill */
+.badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+.badge-live {
+  background: rgba(34,197,94,0.12);
+  color: #22c55e;
+}
+.badge-source {
+  background: rgba(99,102,241,0.1);
+  color: #818cf8;
+}
+.badge-up {
+  background: rgba(34,197,94,0.1);
+  color: #22c55e;
+}
+.badge-down {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+/* Table row hover */
+.table-row {
+  transition: background 0.15s;
+}
+.table-row:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+/* KPI card hover glow — platform-specific via data attribute */
+.kpi-card {
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  cursor: default;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Nav item hover */
+.nav-item {
+  transition: background 0.15s, color 0.15s;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.04);
+}
+.nav-item.active {
+  background: rgba(99,102,241,0.1);
+  border-color: rgba(99,102,241,0.25);
+  color: #818cf8;
 }

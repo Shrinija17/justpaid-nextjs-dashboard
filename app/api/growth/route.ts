@@ -6,7 +6,7 @@ export const revalidate = 3600;
 export async function GET() {
   const sql = `
     SELECT platform, date, followers
-    FROM \`${PROJECT}.${DATASET}.channel_metrics\`
+    FROM \`${PROJECT}.${DATASET}.channel_daily_metrics\`
     WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
     ORDER BY date ASC, platform ASC
   `;

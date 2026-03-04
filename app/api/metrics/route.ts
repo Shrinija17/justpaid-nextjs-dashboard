@@ -6,8 +6,8 @@ export const revalidate = 3600;
 export async function GET() {
   const sql = `
     SELECT platform, followers, follower_change, engagement_rate
-    FROM \`${PROJECT}.${DATASET}.channel_metrics\`
-    WHERE date = (SELECT MAX(date) FROM \`${PROJECT}.${DATASET}.channel_metrics\`)
+    FROM \`${PROJECT}.${DATASET}.channel_daily_metrics\`
+    WHERE date = (SELECT MAX(date) FROM \`${PROJECT}.${DATASET}.channel_daily_metrics\`)
     ORDER BY followers DESC
   `;
   const rows = await runQuery(sql);

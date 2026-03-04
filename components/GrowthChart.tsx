@@ -4,8 +4,8 @@ import { PLATFORM_COLORS } from "@/lib/utils";
 import { useMemo } from "react";
 
 const TOOLTIP_STYLE = {
-  background: "#1A1D29", border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 10, fontSize: 12, color: "#E2E2EA",
+  background: "#18181b", border: "1px solid #27272a",
+  borderRadius: 10, fontSize: 12, color: "#e4e4e7",
 };
 
 export default function GrowthChart({ data }: { data: {platform:string; date:{value:string}|string; followers:number}[] }) {
@@ -25,13 +25,13 @@ export default function GrowthChart({ data }: { data: {platform:string; date:{va
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={chartData}>
-        <XAxis dataKey="date" tick={{ fill:"#5A5A6A", fontSize:10 }} tickLine={false} axisLine={false} interval={14} />
-        <YAxis tick={{ fill:"#5A5A6A", fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}K` : v} />
+        <XAxis dataKey="date" tick={{ fill:"#52525b", fontSize:10 }} tickLine={false} axisLine={false} interval={14} />
+        <YAxis tick={{ fill:"#52525b", fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(1)}K` : v} />
         <Tooltip contentStyle={TOOLTIP_STYLE} />
-        <Legend wrapperStyle={{ fontSize:11, color:"#8A8A9A" }} />
+        <Legend wrapperStyle={{ fontSize:11, color:"#a1a1aa" }} />
         {platforms.map(p => (
           <Line key={p} type="monotone" dataKey={p} stroke={PLATFORM_COLORS[p]}
-            strokeWidth={2} dot={false} activeDot={{ r:4 }} />
+            strokeWidth={2} dot={false} activeDot={{ r:4, strokeWidth:0 }} />
         ))}
       </LineChart>
     </ResponsiveContainer>

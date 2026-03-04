@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import DashboardLayout from "@/components/DashboardLayout";
 import { timeAgo } from "@/lib/utils";
+import { Crosshair, Flame, MessageCircle, ArrowUp } from "lucide-react";
 
 interface Signal {
   source: string; title: string; url: string;
@@ -8,24 +9,18 @@ interface Signal {
   subreddit?: string; author?: string; category: string;
 }
 
-async function getLeads(): Promise<Signal[]> {
-  try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const res = await fetch(`${base}/api/leads`, { next: { revalidate: 21600 } });
-    return res.json();
-  } catch { return []; }
-}
+import { getLeads } from "@/lib/queries";
 
 const CAT_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  payroll:    { bg: "rgba(0,184,148,0.12)",   color: "#00B894", label: "Payroll" },
-  contractor: { bg: "rgba(253,203,110,0.12)", color: "#FDCB6E", label: "Contractor" },
-  invoice:    { bg: "rgba(162,155,254,0.12)", color: "#A29BFE", label: "Invoice" },
-  general:    { bg: "rgba(108,92,231,0.10)",  color: "#6C5CE7", label: "General" },
+  payroll:    { bg: "rgba(34,197,94,0.1)",   color: "#22c55e", label: "Payroll" },
+  contractor: { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: "Contractor" },
+  invoice:    { bg: "rgba(129,140,248,0.1)", color: "#818cf8", label: "Invoice" },
+  general:    { bg: "rgba(99,102,241,0.08)", color: "#6366f1", label: "General" },
 };
 
 const SRC_STYLE: Record<string, { bg: string; color: string }> = {
-  Reddit: { bg: "rgba(255,69,0,0.15)",  color: "#FF4500" },
-  HN:     { bg: "rgba(255,102,0,0.15)", color: "#FF6600" },
+  Reddit: { bg: "rgba(255,69,0,0.1)",  color: "#FF4500" },
+  HN:     { bg: "rgba(255,102,0,0.1)", color: "#FF6600" },
 };
 
 export default async function LeadsPage() {
@@ -38,17 +33,18 @@ export default async function LeadsPage() {
     <DashboardLayout>
       {/* Hero */}
       <div style={{
-        background: "linear-gradient(135deg,rgba(255,69,0,0.08) 0%,rgba(108,92,231,0.06) 100%)",
-        border: "1px solid rgba(255,69,0,0.15)", borderRadius: 20,
-        padding: "1.8rem 2rem", marginBottom: "2rem",
+        background: "linear-gradient(135deg,rgba(255,69,0,0.06) 0%,rgba(99,102,241,0.04) 100%)",
+        border: "1px solid rgba(255,69,0,0.1)", borderRadius: 20,
+        padding: "2rem 2.25rem", marginBottom: "2rem",
       }}>
-        <div style={{ fontSize:"0.62rem", fontWeight:700, color:"#FF4500", textTransform:"uppercase", letterSpacing:"2px", marginBottom:"0.4rem" }}>
+        <div style={{ fontSize:"0.62rem", fontWeight:600, color:"#FF4500", textTransform:"uppercase", letterSpacing:"2px", marginBottom:"0.5rem" }}>
           Demand Intelligence · Live
         </div>
-        <h1 style={{ fontSize:"clamp(1.6rem,3vw,2.2rem)", fontWeight:900, letterSpacing:"-1px", color:"#E2E2EA", margin:"0 0 0.4rem" }}>
-          🎯 Warm Leads Found This Week
+        <h1 style={{ fontSize:"clamp(1.6rem,3vw,2.2rem)", fontWeight:800, letterSpacing:"-0.5px", color:"#fafafa", margin:"0 0 0.4rem", display:"flex", alignItems:"center", gap:"0.6rem" }}>
+          <Crosshair size={28} strokeWidth={1.5} />
+          Warm Leads Found This Week
         </h1>
-        <p style={{ color:"#8A8A9A", fontSize:"0.88rem", margin:0 }}>
+        <p style={{ color:"#71717a", fontSize:"0.88rem", margin:0 }}>
           People actively asking about contractor payments, payroll & invoicing on Reddit and Hacker News
         </p>
       </div>
@@ -56,14 +52,14 @@ export default async function LeadsPage() {
       {/* Stats */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
         {[
-          { label:"Total Signals", value: signals.length, color:"#6C5CE7" },
-          { label:"🔥 Hot (50+ pts)", value: hot, color:"#E17055" },
+          { label:"Total Signals", value: signals.length, color:"#6366f1" },
+          { label:"Hot (50+ pts)", value: hot, color:"#ef4444" },
           { label:"From Reddit", value: reddit, color:"#FF4500" },
           { label:"From HN", value: hn, color:"#FF6600" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ background:"#12121A", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, padding:"1.2rem", textAlign:"center" }}>
-            <div style={{ fontSize:"0.6rem", color:"#5A5A6A", textTransform:"uppercase", letterSpacing:"1px", marginBottom:"0.4rem" }}>{label}</div>
-            <div style={{ fontSize:"2rem", fontWeight:900, color }}>{value}</div>
+          <div key={label} className="card" style={{ textAlign:"center" }}>
+            <div style={{ fontSize:"0.6rem", color:"#52525b", textTransform:"uppercase", letterSpacing:"1px", marginBottom:"0.4rem", fontWeight:500 }}>{label}</div>
+            <div style={{ fontSize:"2rem", fontWeight:800, color, fontVariantNumeric:"tabular-nums" }}>{value}</div>
           </div>
         ))}
       </div>
@@ -71,16 +67,18 @@ export default async function LeadsPage() {
       {/* Top insight */}
       {signals[0] && (
         <div style={{
-          background:"linear-gradient(135deg,rgba(0,184,148,0.07),rgba(0,206,201,0.04))",
-          border:"1px solid rgba(0,184,148,0.2)", borderRadius:14, padding:"1.2rem 1.5rem", marginBottom:"2rem",
+          background:"linear-gradient(135deg,rgba(34,197,94,0.05),rgba(6,182,212,0.03))",
+          border:"1px solid rgba(34,197,94,0.15)", borderRadius:14, padding:"1.2rem 1.5rem", marginBottom:"2rem",
           display:"flex", gap:"1rem", alignItems:"flex-start",
         }}>
-          <span style={{ fontSize:"1.5rem" }}>💡</span>
+          <div style={{ width:36, height:36, borderRadius:10, background:"rgba(34,197,94,0.1)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            <Flame size={18} color="#22c55e" />
+          </div>
           <div>
-            <div style={{ fontSize:"0.7rem", fontWeight:700, color:"#00B894", textTransform:"uppercase", letterSpacing:"0.8px", marginBottom:"0.3rem" }}>Top Signal Right Now</div>
-            <div style={{ fontSize:"0.9rem", color:"#E2E2EA", fontWeight:600 }}>{signals[0].title}</div>
-            <div style={{ fontSize:"0.75rem", color:"#8A8A9A", marginTop:"0.3rem" }}>
-              {signals[0].score} upvotes · {signals[0].comments} comments · This is a warm prospect actively discussing the pain JustPaid solves
+            <div style={{ fontSize:"0.7rem", fontWeight:600, color:"#22c55e", textTransform:"uppercase", letterSpacing:"0.8px", marginBottom:"0.3rem" }}>Top Signal Right Now</div>
+            <div style={{ fontSize:"0.9rem", color:"#fafafa", fontWeight:600 }}>{signals[0].title}</div>
+            <div style={{ fontSize:"0.75rem", color:"#71717a", marginTop:"0.3rem" }}>
+              {signals[0].score} upvotes · {signals[0].comments} comments · Warm prospect actively discussing the pain JustPaid solves
             </div>
           </div>
         </div>
@@ -94,25 +92,11 @@ export default async function LeadsPage() {
           const isHot = s.score >= 50;
           return (
             <a key={i} href={s.url} target="_blank" rel="noreferrer" style={{ textDecoration:"none" }}>
-              <div style={{
-                background:"#12121A", border:`1px solid rgba(255,255,255,0.06)`,
+              <div className="card" style={{
                 borderLeft: `3px solid ${cat.color}`,
-                borderRadius: "0 14px 14px 0", padding:"1.2rem",
-                transition:"all 0.22s", cursor:"pointer",
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "translateX(4px)";
-                el.style.borderColor = `${cat.color}55`;
-                el.style.boxShadow = `0 4px 20px rgba(0,0,0,0.3)`;
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "translateX(0)";
-                el.style.borderColor = "rgba(255,255,255,0.06)";
-                el.style.boxShadow = "none";
-              }}
-              >
+                borderRadius: "0 14px 14px 0",
+                cursor:"pointer",
+              }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"0.7rem", gap:"0.5rem", flexWrap:"wrap" }}>
                   <div style={{ display:"flex", gap:"0.4rem", flexWrap:"wrap" }}>
                     <span style={{ background:src.bg, color:src.color, fontSize:"0.6rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", padding:"0.2rem 0.6rem", borderRadius:6 }}>
@@ -121,13 +105,13 @@ export default async function LeadsPage() {
                     <span style={{ background:cat.bg, color:cat.color, fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>
                       {cat.label}
                     </span>
-                    {isHot && <span style={{ background:"rgba(225,112,85,0.12)", color:"#E17055", fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>🔥 Hot</span>}
+                    {isHot && <span style={{ background:"rgba(239,68,68,0.1)", color:"#ef4444", fontSize:"0.6rem", fontWeight:700, padding:"0.2rem 0.6rem", borderRadius:6 }}>Hot</span>}
                   </div>
                 </div>
-                <div style={{ fontSize:"0.88rem", fontWeight:600, color:"#E2E2EA", lineHeight:1.4, marginBottom:"0.7rem" }}>{s.title}</div>
-                <div style={{ display:"flex", gap:"1rem", fontSize:"0.7rem", color:"#5A5A6A" }}>
-                  <span>↑ {s.score}</span>
-                  <span>💬 {s.comments}</span>
+                <div style={{ fontSize:"0.88rem", fontWeight:600, color:"#e4e4e7", lineHeight:1.4, marginBottom:"0.7rem" }}>{s.title}</div>
+                <div style={{ display:"flex", gap:"1rem", fontSize:"0.7rem", color:"#52525b", alignItems:"center" }}>
+                  <span style={{ display:"flex", alignItems:"center", gap:"0.2rem" }}><ArrowUp size={12} /> {s.score}</span>
+                  <span style={{ display:"flex", alignItems:"center", gap:"0.2rem" }}><MessageCircle size={12} /> {s.comments}</span>
                   <span>{timeAgo(s.created)}</span>
                   {s.author && <span>by {s.author}</span>}
                 </div>
@@ -138,14 +122,14 @@ export default async function LeadsPage() {
       </div>
 
       {/* Outreach templates */}
-      <div style={{ marginTop:"2.5rem", display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
+      <div style={{ marginTop:"2.5rem", display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem" }}>
         {[
           { title:"Reddit Comment Template", content:`Hey! We built JustPaid to solve exactly this.\n[specific pain they mentioned] is one of the top reasons founders come to us.\n\nHappy to show you how we handle it — no pitch, just a quick look if it's useful. DM me!` },
           { title:"HN Reply Template", content:`This is exactly the problem we're solving at JustPaid.\n[their specific pain] comes up constantly — we've built [specific feature] to handle it.\n\nWould love your feedback if you want to take a look: justpaid.io` },
         ].map(({ title, content }) => (
-          <div key={title} style={{ background:"#12121A", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, padding:"1.4rem" }}>
-            <div style={{ fontSize:"0.72rem", fontWeight:700, color:"#6C5CE7", textTransform:"uppercase", letterSpacing:"0.8px", marginBottom:"0.8rem" }}>{title}</div>
-            <pre style={{ fontSize:"0.78rem", color:"#8A8A9A", lineHeight:1.6, whiteSpace:"pre-wrap", margin:0, fontFamily:"Inter,sans-serif" }}>{content}</pre>
+          <div key={title} className="card">
+            <div style={{ fontSize:"0.72rem", fontWeight:600, color:"#6366f1", textTransform:"uppercase", letterSpacing:"0.8px", marginBottom:"0.8rem" }}>{title}</div>
+            <pre style={{ fontSize:"0.78rem", color:"#71717a", lineHeight:1.6, whiteSpace:"pre-wrap", margin:0, fontFamily:"Inter,sans-serif" }}>{content}</pre>
           </div>
         ))}
       </div>

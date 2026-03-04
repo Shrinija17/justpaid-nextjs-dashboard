@@ -13,15 +13,8 @@ export function timeAgo(ts: number): string {
 }
 
 export const PLATFORM_COLORS: Record<string, string> = {
-  YouTube: "#FF4444",
-  Instagram: "#E4405F",
-  LinkedIn: "#0A66C2",
-  Twitter: "#1DA1F2",
-};
-
-export const PLATFORM_ICONS: Record<string, string> = {
-  YouTube: "▶️",
-  Instagram: "📸",
-  LinkedIn: "💼",
-  Twitter: "𝕏",
+  YouTube: "#ef4444",
+  Instagram: "#f472b6",
+  LinkedIn: "#3b82f6",
+  Twitter: "#a1a1aa",
 };

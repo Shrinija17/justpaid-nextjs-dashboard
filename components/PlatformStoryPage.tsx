@@ -183,64 +183,75 @@ export default function PlatformStoryPage({ platform, icon, data, benchmarkAvg, 
 
       {/* ═══ MONTHLY TIMELINE ═══ */}
       <div className="card" style={{ marginBottom: "2rem" }}>
-        <div className="section-title"><BarChart3 size={16} /> Month-by-Month Journey</div>
-        <p style={{ fontSize: "0.75rem", color: "#71717a", margin: "-0.5rem 0 1rem", lineHeight: 1.6 }}>
-          Each bar represents total views for that month. The green dots show the average engagement rate per post. The dashed line marks the transition from early exploration to the current content strategy. Watch how consistency built momentum over time.
+        <div className="section-title"><BarChart3 size={16} /> Monthly Performance</div>
+        <p style={{ fontSize: "0.75rem", color: "#71717a", margin: "-0.5rem 0 1.25rem", lineHeight: 1.6 }}>
+          Total views and engagement rate for each month. Higher bars = more views. Color intensity indicates engagement quality.
         </p>
 
-        {/* Bar chart */}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", height: 220, padding: "0 0.5rem" }}>
-          {monthly.map((m) => {
-            const viewPct = Number(m.views) / maxViews * 100;
-            const engPct = Number(m.avg_engagement) / maxEng * 100;
-            const isTransition = m.month === "2025-11";
-            return (
-              <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", borderRight: isTransition ? `2px dashed ${color}40` : undefined, paddingRight: isTransition ? "0.5rem" : undefined }}>
-                {/* Stats above bar */}
-                <div style={{ fontSize: "0.55rem", color: "#71717a", fontWeight: 600, marginBottom: "0.2rem", textAlign: "center", whiteSpace: "nowrap" }}>
-                  {fmt(Number(m.views))}
+        {/* Bar chart with Y-axis */}
+        <div style={{ display: "flex", gap: 0 }}>
+          {/* Y-axis labels */}
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: 200, paddingRight: "0.5rem", paddingBottom: "0.2rem" }}>
+            <div style={{ fontSize: "0.55rem", color: "#52525b", textAlign: "right", whiteSpace: "nowrap" }}>{fmt(maxViews)}</div>
+            <div style={{ fontSize: "0.55rem", color: "#52525b", textAlign: "right", whiteSpace: "nowrap" }}>{fmt(Math.round(maxViews / 2))}</div>
+            <div style={{ fontSize: "0.55rem", color: "#52525b", textAlign: "right" }}>0</div>
+          </div>
+
+          {/* Bars */}
+          <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: "0.4rem", height: 200, borderLeft: "1px solid #27272a", borderBottom: "1px solid #27272a", paddingLeft: "0.5rem", paddingBottom: 0, position: "relative" }}>
+            {/* Gridlines */}
+            <div style={{ position: "absolute", left: 0, right: 0, top: 0, borderTop: "1px solid #1a1a1e" }} />
+            <div style={{ position: "absolute", left: 0, right: 0, top: "50%", borderTop: "1px solid #1a1a1e" }} />
+
+            {monthly.map((m) => {
+              const viewPct = Number(m.views) / maxViews * 100;
+              const eng = Number(m.avg_engagement);
+              const barColor = eng > 3 ? color : eng > 1 ? `${color}90` : `${color}50`;
+              return (
+                <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%", justifyContent: "flex-end" }}>
+                  {/* Value on top */}
+                  <div style={{ fontSize: "0.6rem", color: "#a1a1aa", fontWeight: 600, marginBottom: "0.2rem", whiteSpace: "nowrap" }}>
+                    {fmt(Number(m.views))}
+                  </div>
+                  {/* Bar */}
+                  <div style={{
+                    width: "80%", maxWidth: 56, borderRadius: "6px 6px 0 0",
+                    height: `${Math.max(viewPct, 2)}%`,
+                    background: `linear-gradient(180deg, ${barColor} 0%, ${barColor}60 100%)`,
+                    position: "relative",
+                  }}>
+                    {/* Engagement badge inside bar */}
+                    <div style={{
+                      position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)",
+                      fontSize: "0.55rem", fontWeight: 700, whiteSpace: "nowrap",
+                      color: eng > 3 ? "#22c55e" : eng > 1 ? "#eab308" : "#ef4444",
+                    }}>
+                      {eng > 0 ? `${eng}%` : ""}
+                    </div>
+                  </div>
                 </div>
-                {/* Engagement dot */}
-                <div style={{
-                  position: "absolute", bottom: `${Math.max(engPct, 5)}%`,
-                  width: 10, height: 10, borderRadius: "50%",
-                  background: "#22c55e", border: "2px solid #18181b", zIndex: 2,
-                }} />
-                {/* View bar */}
-                <div style={{
-                  width: "100%", maxWidth: 60, borderRadius: "6px 6px 0 0",
-                  height: `${Math.max(viewPct, 3)}%`,
-                  background: `linear-gradient(180deg, ${color}90 0%, ${color}40 100%)`,
-                }} />
-                {/* Month + posts label */}
-                <div style={{ marginTop: "0.3rem", textAlign: "center" }}>
-                  <div style={{ fontSize: "0.6rem", fontWeight: 600, color: "#a1a1aa" }}>{monthLabel(m.month)}</div>
-                  <div style={{ fontSize: "0.5rem", color: "#3f3f46" }}>{m.posts} posts</div>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {/* Engagement rate labels under chart */}
-        <div style={{ display: "flex", gap: "0.5rem", padding: "0.5rem 0.5rem 0", borderTop: "1px solid #27272a", marginTop: "0.5rem" }}>
+        {/* X-axis labels */}
+        <div style={{ display: "flex", paddingLeft: "2.5rem" }}>
           {monthly.map((m) => (
-            <div key={m.month} style={{ flex: 1, textAlign: "center", fontSize: "0.58rem", fontWeight: 600, color: Number(m.avg_engagement) > 3 ? "#22c55e" : Number(m.avg_engagement) > 1 ? "#eab308" : "#ef4444" }}>
-              {m.avg_engagement}%
+            <div key={m.month} style={{ flex: 1, textAlign: "center", paddingTop: "0.4rem" }}>
+              <div style={{ fontSize: "0.62rem", fontWeight: 600, color: "#a1a1aa" }}>{monthLabel(m.month)}</div>
+              <div style={{ fontSize: "0.5rem", color: "#3f3f46" }}>{m.posts} posts</div>
             </div>
           ))}
         </div>
 
         {/* Legend */}
-        <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", marginTop: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid #1e1e22" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.62rem", color: "#71717a" }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, background: `${color}70` }} /> Views
+            <div style={{ width: 12, height: 12, borderRadius: 3, background: `${color}70` }} /> Total Views
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.62rem", color: "#71717a" }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} /> Engagement %
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.62rem", color: "#71717a" }}>
-            <div style={{ width: 16, height: 0, borderTop: `2px dashed ${color}60` }} /> Strategy shift
+            <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "#22c55e" }}>%</span> Engagement Rate
           </div>
         </div>
       </div>

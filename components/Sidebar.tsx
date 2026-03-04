@@ -1,12 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Crosshair, Swords, BarChart3, Youtube, Instagram, Linkedin, Twitter } from "lucide-react";
+import { LayoutDashboard, Swords, BarChart3, Youtube, Instagram, Linkedin, Twitter } from "lucide-react";
 
 const mainNav = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/leads", icon: Crosshair, label: "Lead Intel" },
   { href: "/competitive", icon: Swords, label: "Competitive" },
 ];
 

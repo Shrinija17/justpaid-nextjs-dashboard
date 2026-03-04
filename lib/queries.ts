@@ -241,9 +241,12 @@ export async function getLeads(): Promise<Signal[]> {
 
 export async function getMetrics() {
   const sql = `
+    WITH latest AS (
+      SELECT *, ROW_NUMBER() OVER (PARTITION BY platform ORDER BY date DESC) as rn
+      FROM \`${PROJECT}.${DATASET}.channel_daily_metrics\`
+    )
     SELECT platform, followers, follower_change, engagement_rate
-    FROM \`${PROJECT}.${DATASET}.channel_daily_metrics\`
-    WHERE date = (SELECT MAX(date) FROM \`${PROJECT}.${DATASET}.channel_daily_metrics\`)
+    FROM latest WHERE rn = 1
     ORDER BY followers DESC
   `;
   const rows = await runQuery(sql);
